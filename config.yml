@@ -1,0 +1,11 @@
+# This is the configuration file for the url shortener service.
+# A few notes:
+# - The redis host should be a host-port string (See https://golang.org/pkg/net/#SplitHostPort)
+#     the host & port should both be specified
+# - The server port should be between the range of 0-65535 (The range of the ports, AKA limit of a 
+#     unsigned 16 bit integer)
+redis:
+    host: 'localhost'
+    port: 6379
+server:
+    port: 8080 

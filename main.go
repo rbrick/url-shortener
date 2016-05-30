@@ -1,63 +1,74 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/mux"
-	"errors"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"log"
-	"strconv"
+	"net"
+	"net/http"
 )
 
-var redisConn redis.Conn
-
-// A short url, contains the time it was created,
-type ShortUrl struct {
-	Id        string `json:"id"`
-	LongUrl   string `json:"longUrl"`
-	Timestamp int64 `json:"timestamp"`
-	Clicks    int `json:"clicks"`
-}
-
-// performs a lookup on the database for a short url
-func lookup(id string) (*ShortUrl, error) {
-	val, err := redis.ByteSlices(redisConn.Do("HMGET", id, "Id", "LongUrl", "Timestamp", "Clicks"))
-	if err != nil {
-		return nil, errors.New("Invalid ID!")
+type Config struct {
+	Redis struct {
+		Host string `yaml:"host"`
+		Port string `yaml:"port"`
 	}
-	longUrl := string(val[1])
-	timestamp, _ := strconv.Atoi(string(val[2]))
-	clicks, _ := strconv.Atoi(string(val[3]))
-	return &ShortUrl{
-		id,
-		longUrl,
-		int64(timestamp),
-		clicks,
-	}, nil
+	Server struct {
+		Port uint16 `yaml:"port"`
+	}
 }
+
+var (
+	redisConn      redis.Conn
+	config         Config
+	shortenService RedisShortenService
+)
 
 func init() {
-	if r, err := redis.Dial("tcp", "localhost:6379"); err != nil {
+
+	// Load the config
+	if d, err := ioutil.ReadFile("config.yml"); err != nil {
+		log.Fatal(err)
+	} else {
+		err := yaml.Unmarshal(d, &config)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// At this point we can assume the config has been loaded, soooo connect to the redis
+	if r, err := redis.Dial("tcp", net.JoinHostPort(config.Redis.Host, config.Redis.Port)); err != nil {
 		log.Fatal(err)
 	} else {
 		redisConn = r
+		shortenService = RedisShortenService{map[string]ShortUrl{}}
 	}
 }
 
 func main() {
+	// Create a new router
 	router := mux.NewRouter()
-	router.HandleFunc("/{id:[\\w]+}", redirect)
+
+	// Handle the redirect functionality
+	router.HandleFunc("/r/{id:[a-zA-Z0-9_]+}", RedirectHandler)
+	// Handle the index page
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World!"))
 	})
 
-	http.ListenAndServe(":8080", router)
+	http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), router)
 }
 
 // Handles redirecting to a long url
-func redirect(w http.ResponseWriter, r *http.Request) {
+func RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	v := mux.Vars(r)
-	s, err := lookup(v["id"])
+	log.Println("Requested Redirect")
+	id := v["id"]
+	log.Println("Requested ID:", id)
+	s, err := shortenService.Lookup(id)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		return

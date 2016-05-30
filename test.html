@@ -4,50 +4,67 @@
     <meta charset="UTF-8">
     <title>Margin Test</title>
 
-    <script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js"
+            integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
 
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+          integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
     <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+          integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
     <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+            integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+            crossorigin="anonymous"></script>
     <style>
         .center {
           display: flex;
           justify-content: center;
         }
+
+
+
     </style>
 </head>
 <body>
-  <div class="container">
-     <h2 class="text-center">idk.li</h2>
-     <form class="center form-inline">
-         <input class="form-control" placeholder="Long URL..." type="url" name="longurl" required>
-         <input class="form-control btn btn-primary" value="Shorten" type="submit">
-     </form>
-     <hr />
-     <h3 class="text-center">Recent</h3>
-     <table class="table">
-       <thead>
-         <tr>
-           <th>Code</th>
-           <th>Long URL</th>
-         </tr>
-       </thead>
-       <tbody>
-         <tr>
-           <td>Example</td>
-           <td><a href="http://www.google.com">http://www.google.com</a></td>
-         </tr>
-         <tr>
-           <td>abFgZH1</td>
-           <td><a href="http://www.google.com">http://www.google.com</a></td>
-         </tr>
-       </tbody>
-     </table>
-  </div>
+<div class="container">
+    <h2 class="text-center">idek.pw</h2>
+    <form class="center form-inline">
+        <input class="form-control" style="width: 500px;" placeholder="Long URL..." type="url" name="longurl" required>
+        <input class="form-control btn btn-primary" value="Shorten" type="submit">
+    </form>
+    <hr/>
+    <h3 class="text-center">Recent</h3>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Code</th>
+            <th>Long URL</th>
+            <th>Edit</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Example</td>
+            <td><a href="http://www.google.com">http://www.google.com</a></td>
+            <td>
+                <button class="btn btn-success">Manage</button>
+                <button class="btn btn-danger">Delete</button>
+            </td>
+        </tr>
+        <tr>
+            <td>abFgZH1</td>
+            <td><a href="http://www.google.com">http://www.google.com</a></td>
+            <td>
+                <button class="btn btn-success">Manage</button>
+                <button class="btn btn-danger">Delete</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 </body>
 </html>
