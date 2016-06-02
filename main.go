@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./storage"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/mux"
@@ -22,9 +23,8 @@ type Config struct {
 }
 
 var (
-	redisConn      redis.Conn
 	config         Config
-	shortenService RedisShortenService
+	shortenService *storage.RedisShortenService
 )
 
 func init() {
@@ -43,8 +43,7 @@ func init() {
 	if r, err := redis.Dial("tcp", net.JoinHostPort(config.Redis.Host, config.Redis.Port)); err != nil {
 		log.Fatal(err)
 	} else {
-		redisConn = r
-		shortenService = RedisShortenService{map[string]ShortUrl{}}
+		shortenService = storage.NewRedisShortenService(r)
 	}
 }
 
@@ -53,25 +52,16 @@ func main() {
 	router := mux.NewRouter()
 
 	// Handle the redirect functionality
-	router.HandleFunc("/r/{id:[a-zA-Z0-9_]+}", RedirectHandler)
-	// Handle the index page
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World!"))
-	})
+	router.HandleFunc("/{id:[a-zA-Z0-9_]+}", RedirectHandler)
+
+	// Handle static files
+	router.PathPrefix("/static/").Handler(fileServer{"static", true})
+
+	// Handle 404 errors
+	router.NotFoundHandler = notFoundHandler{}
+
+	// Handle API routes
+	router.HandleFunc("/api/lookup", ApiLookupHandler)
 
 	http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), router)
-}
-
-// Handles redirecting to a long url
-func RedirectHandler(w http.ResponseWriter, r *http.Request) {
-	v := mux.Vars(r)
-	log.Println("Requested Redirect")
-	id := v["id"]
-	log.Println("Requested ID:", id)
-	s, err := shortenService.Lookup(id)
-	if err != nil {
-		w.Write([]byte(err.Error()))
-		return
-	}
-	http.Redirect(w, r, s.LongUrl, http.StatusMovedPermanently)
 }
