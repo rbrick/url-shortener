@@ -11,9 +11,8 @@ function onSubmit() {
   var longUrl = document.getElementById('longUrl');
   var errorHolder = document.getElementById('errorHolder');
   var shortened = document.getElementById('shortened');
-  // console.log('LETS SEE HOW FAR WE\'VE COME');
+  
   create(longUrl.value, function(event){
-    console.log('LETS SEE HOW FAR WE\'VE COME');
     update(JSON.parse(event.responseText));
   });
 }
