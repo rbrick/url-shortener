@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Margin Test</title>
+    <title>idek.pw</title>
 
     <script src="https://code.jquery.com/jquery-2.2.3.min.js"
             integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
@@ -19,7 +19,19 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
             integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
             crossorigin="anonymous"></script>
+
+    <!-- Our fonts :D -->
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,400italic,100' rel='stylesheet' type='text/css'>
+
+    <script src="/js/client.js"></script>
+    <script src="/js/index.js"></script>
     <style>
+        body {
+          font-family: 'Roboto', sans-serif;
+          background-color: #282C34;
+          color: #FFFFFF;
+        }
+
         .center {
           display: flex;
           justify-content: center;
@@ -28,40 +40,12 @@
 </head>
 <body>
 <div class="container">
-    <h2 class="text-center">idek.pw</h2>
-    <form class="center form-inline">
-        <input class="form-control" style="width: 500px;" placeholder="Long URL..." type="url" name="longurl" required>
-        <input class="form-control btn btn-primary" value="Shorten" type="submit">
+    <h2 class="text-center">idek.pw<span id="shortened"></span></h2>
+    <div id="errorHolder"></div>
+    <form class="center form-inline" id="shortenForm">
+        <input id="longUrl" class="form-control" style="width: 500px;" placeholder="Long URL..." type="url" required>
+        <input id="shorten" class="form-control btn btn-primary" value="Shorten" type="submit">
     </form>
-    <hr/>
-    <h3 class="text-center">Recent</h3>
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Code</th>
-            <th>Long URL</th>
-            <th>Manage</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>Example</td>
-            <td><a href="http://www.google.com">http://www.google.com</a></td>
-            <td>
-                <button class="btn btn-success">Edit</button>
-                <button class="btn btn-danger">Delete</button>
-            </td>
-        </tr>
-        <tr>
-            <td>abFgZH1</td>
-            <td><a href="http://www.google.com">http://www.google.com</a></td>
-            <td>
-                <button class="btn btn-success">Edit</button>
-                <button class="btn btn-danger">Delete</button>
-            </td>
-        </tr>
-        </tbody>
-    </table>
 </div>
 </body>
 </html>

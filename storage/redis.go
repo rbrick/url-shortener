@@ -4,20 +4,24 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
+const REDIS_SHORTURLS = "shorturls:"
+const REDIS_HASHES = "shorturls_hashes:"
+
 type RedisShortenService struct {
-	cache map[string]ShortUrl
-	conn  redis.Conn
+	urlCache  map[string]ShortUrl
+	hashCache map[string]string
+	conn      redis.Conn
 }
 
 // performs a lookup on the database for a short url
 func (r *RedisShortenService) Lookup(id string) (*ShortUrl, error) {
-	if v, ok := r.cache[id]; ok {
+	if v, ok := r.urlCache[id]; ok {
 		return &v, nil
 	}
 
 	if r.Exists(id) {
 		// Send HGETALL Redis command, and get the string values as interfaces which we can use
-		val, err := redis.Values(r.conn.Do("HGETALL", id))
+		val, err := redis.Values(r.conn.Do("HGETALL", REDIS_SHORTURLS+id))
 		if err != nil {
 			return nil, err
 		}
@@ -34,31 +38,84 @@ func (r *RedisShortenService) Lookup(id string) (*ShortUrl, error) {
 			return nil, ErrorDoesNotExist
 		}
 
-		r.cache[id] = res
+		r.urlCache[id] = res
+		r.hashCache[res.Hash] = id
 		return &res, nil
 	}
 	return nil, ErrorDoesNotExist
 }
 
 func (r *RedisShortenService) Exists(id string) bool {
-	if _, ok := r.cache[id]; ok {
-		return ok
-	}
-	res, err := redis.Bool(r.conn.Do("EXISTS", id))
-	if err != nil {
-		return false
-	}
-	return res
+	return r.exists("url", id)
 }
 
 func (r *RedisShortenService) Delete(id string) error {
 	return ErrorFailedToDelete
 }
 
-func (r *RedisShortenService) Insert(id, longUrl string) error {
-	return ErrorFailedToCreate
+func (r *RedisShortenService) Insert(url *ShortUrl) error {
+	if r.Exists(url.Id) {
+		return nil
+	}
+	_, err := r.conn.Do("HMSET", REDIS_SHORTURLS+url.Id, "Id", url.Id, "LongUrl", url.LongUrl, "Hash", url.Hash, "Timestamp", url.Timestamp)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.conn.Do("SET", REDIS_HASHES+url.Hash, url.Id)
+	if err != nil {
+		return err
+	}
+
+	r.urlCache[url.Id] = *url
+	r.hashCache[url.Hash] = url.Id
+	return nil
+}
+
+func (r *RedisShortenService) ReverseLookup(longUrl string) (*ShortUrl, error) {
+	query := NewShortURL(longUrl)
+	if r.exists("hash", query.Hash) {
+		if v, ok := r.hashCache[query.Hash]; ok {
+			return r.Lookup(v)
+		}
+
+		v, err := redis.String(r.conn.Do("GET", query.Hash))
+		if err != nil {
+			return nil, err
+		}
+		r.hashCache[query.Hash] = v
+		return r.Lookup(v)
+	}
+	return nil, ErrorFailedToLookup
+}
+
+func (r *RedisShortenService) exists(lookupType, id string) bool {
+	var key string
+
+	switch lookupType {
+	case "url":
+		{
+			if _, ok := r.urlCache[id]; ok {
+				return ok
+			}
+			key = REDIS_SHORTURLS
+		}
+	case "hash":
+		if _, ok := r.hashCache[id]; ok {
+			return ok
+		}
+		key = REDIS_HASHES
+	default:
+		return false
+	}
+
+	res, err := redis.Bool(r.conn.Do("EXISTS", key+id))
+	if err != nil {
+		return false
+	}
+	return res
 }
 
 func NewRedisShortenService(conn redis.Conn) *RedisShortenService {
-	return &RedisShortenService{map[string]ShortUrl{}, conn}
+	return &RedisShortenService{map[string]ShortUrl{}, map[string]string{}, conn}
 }

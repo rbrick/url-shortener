@@ -27,6 +27,8 @@ var (
 	shortenService *storage.RedisShortenService
 )
 
+const URL_PATTERN = `^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$`
+
 func init() {
 
 	// Load the config
@@ -54,14 +56,26 @@ func main() {
 	// Handle the redirect functionality
 	router.HandleFunc("/{id:[a-zA-Z0-9_]+}", RedirectHandler)
 
+	// Handle API routes
+	router.HandleFunc("/api/lookup", ApiLookupHandler)
+	router.HandleFunc("/api/create", ApiCreateHandler)
+
 	// Handle static files
-	router.PathPrefix("/static/").Handler(fileServer{"static", true})
+	router.PathPrefix("/").Handler(fileServer{"static", true})
 
 	// Handle 404 errors
 	router.NotFoundHandler = notFoundHandler{}
 
-	// Handle API routes
-	router.HandleFunc("/api/lookup", ApiLookupHandler)
+	server := server{router}
 
-	http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), router)
+	http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), server)
+}
+
+type server struct {
+	delegate http.Handler
+}
+
+func (s server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	log.Println(req.Method, "-", req.URL.Path)
+	s.delegate.ServeHTTP(res, req)
 }

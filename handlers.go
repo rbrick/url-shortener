@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -31,35 +32,72 @@ func ApiLookupHandler(res http.ResponseWriter, req *http.Request) {
 		if id != "" {
 			url, err := shortenService.Lookup(id)
 			if err != nil {
-				handleError(res, err)
+				handleError(res, err, http.StatusInternalServerError)
 				return
 			}
 			response, _ := json.Marshal(url)
 			res.Write(response)
 			return
 		}
-		handleError(res, storage.ErrorFailedToLookup)
+		handleError(res, storage.ErrorFailedToLookup, http.StatusInternalServerError)
 		return
 	}
-	handleError(res, errors.New(http.StatusText(http.StatusMethodNotAllowed)))
+	handleError(res, errors.New(http.StatusText(http.StatusMethodNotAllowed)), http.StatusMethodNotAllowed)
 }
 
 func ApiCreateHandler(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
+		err := req.ParseForm()
+		if err != nil {
+			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
+			return
+		}
 
+		longUrl := strings.Replace(req.PostForm.Get("longUrl"), " ", "", -1)
+		if longUrl == "" {
+			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
+			return
+		}
+
+		matches, _ := regexp.MatchString(URL_PATTERN, longUrl)
+
+		if !matches {
+			handleError(res, storage.ErrorNotURL, http.StatusInternalServerError)
+			return
+		}
+
+		short, _ := shortenService.ReverseLookup(longUrl)
+		if short != nil {
+			response, _ := json.Marshal(short)
+			res.Write(response)
+			return
+		}
+
+		resp := storage.NewShortURL(longUrl)
+		if err = shortenService.Insert(&resp); err != nil {
+			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
+			return
+		}
+
+		response, _ := json.Marshal(resp)
+		res.Write(response)
+		return
 	}
+	handleError(res, errors.New(http.StatusText(http.StatusMethodNotAllowed)), http.StatusMethodNotAllowed)
 }
 
 // Handles an error
-func handleError(res http.ResponseWriter, err error) {
+func handleError(res http.ResponseWriter, err error, errCode int) {
 	response, _ := json.Marshal(struct {
 		Msg string `json:"error"`
 	}{
 		err.Error()})
+	res.WriteHeader(errCode)
 	res.Write(response)
 }
 
 func ApiDeleteHandler(res http.ResponseWriter, req *http.Request) {
+	// TODO(rbrick): I can't just let anyone just delete a URL. Need to add an authentication system
 }
 
 // I wanted a way to block directories
