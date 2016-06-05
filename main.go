@@ -1,10 +1,10 @@
 package main
 
 import (
-	"./storage"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/mux"
+	"github.com/rbrick/url-shortener/storage"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"

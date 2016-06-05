@@ -1,10 +1,10 @@
 package main
 
 import (
-	"./storage"
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/rbrick/url-shortener/storage"
 	"net/http"
 	"path"
 	"path/filepath"
