@@ -2,9 +2,9 @@
 This is a WIP url shortener written in Go. I am trying to make the code clean, and organize (Don't think I am doing to well on that).
 
 ## Planned Features
-[ ] Custom URL endings (Supported in the code, just need to implement the logic)
-[ ] Admin panel (View all created links, delete links)
-[ ] User accounts (Allow for users to create accounts and delete their own links, as well as add API keys for them)
+- [ ] Custom URL endings (Supported in the code, just need to implement the logic)
+- [ ] Admin panel (View all created links, delete links)
+- [ ] User accounts (Allow for users to create accounts and delete their own links, as well as add API keys for them)
 
 
 ## Why use this?
