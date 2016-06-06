@@ -49,8 +49,6 @@ func ApiCreateHandler(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost || req.Method == http.MethodGet {
 		err := req.ParseForm()
 
-		res.Header().Add("Accept", "application/x-www-form-urlencoded")
-
 		if err != nil {
 			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
 			return
