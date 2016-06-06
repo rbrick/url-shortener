@@ -48,12 +48,24 @@ func ApiLookupHandler(res http.ResponseWriter, req *http.Request) {
 func ApiCreateHandler(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		err := req.ParseForm()
+
+		sharex := req.URL.Query().Get("sharex") != ""
+
+		if sharex {
+			err = req.ParseMultipartForm(req.ContentLength)
+			if err != nil {
+				handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
+				return
+			}
+		}
+
 		if err != nil {
 			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
 			return
 		}
 
 		longUrl := strings.Replace(req.PostForm.Get("longUrl"), " ", "", -1)
+
 		if longUrl == "" {
 			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
 			return
