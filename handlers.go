@@ -46,18 +46,10 @@ func ApiLookupHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func ApiCreateHandler(res http.ResponseWriter, req *http.Request) {
-	if req.Method == http.MethodPost {
+	if req.Method == http.MethodPost || req.Method == http.MethodGet {
 		err := req.ParseForm()
 
-		sharex := req.URL.Query().Get("sharex") != ""
-
-		if sharex {
-			err = req.ParseMultipartForm(req.ContentLength)
-			if err != nil {
-				handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
-				return
-			}
-		}
+		res.Header().Add("Accept", "application/x-www-form-urlencoded")
 
 		if err != nil {
 			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
@@ -65,6 +57,9 @@ func ApiCreateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 
 		longUrl := strings.Replace(req.PostForm.Get("longUrl"), " ", "", -1)
+		if req.Method == http.MethodGet {
+			longUrl = strings.Replace(req.URL.Query().Get("longUrl"), " ", "", -1)
+		}
 
 		if longUrl == "" {
 			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
