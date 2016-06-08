@@ -8,4 +8,9 @@ redis:
     host: 'localhost'
     port: 6379
 server:
-    port: 8080 
+    port: 8080
+    static-directory: "static"
+    use-https: false
+https:
+    key-file: "key.pem"
+    cert-file: "cert.pem"	

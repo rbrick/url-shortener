@@ -18,7 +18,13 @@ type Config struct {
 		Port string `yaml:"port"`
 	}
 	Server struct {
-		Port uint16 `yaml:"port"`
+		Port            uint16 `yaml:"port"`
+		UseHTTPS        bool   `yaml:"use-https"`
+		StaticDirectory string `yaml:"static-directory"`
+	}
+	HTTPS struct {
+		KeyFile  string `yaml:"key-file"`
+		CertFile string `yaml:"cert-file"`
 	}
 }
 
@@ -30,7 +36,7 @@ var (
 const URL_PATTERN = `^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$`
 
 func init() {
-
+	log.Println("Loading config.yml...")
 	// Load the config
 	if d, err := ioutil.ReadFile("config.yml"); err != nil {
 		log.Fatal(err)
@@ -41,12 +47,16 @@ func init() {
 		}
 	}
 
+	log.Println("Config loaded.")
+
+	log.Println("Setting up service.")
 	// At this point we can assume the config has been loaded, soooo connect to the redis
 	if r, err := redis.Dial("tcp", net.JoinHostPort(config.Redis.Host, config.Redis.Port)); err != nil {
 		log.Fatal(err)
 	} else {
 		shortenService = storage.NewRedisShortenService(r)
 	}
+	log.Println("Done.")
 }
 
 func main() {
@@ -68,7 +78,13 @@ func main() {
 
 	server := server{router}
 
-	http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), server)
+	addr := fmt.Sprintf(":%d", config.Server.Port)
+	if config.Server.UseHTTPS {
+		log.Fatal(http.ListenAndServeTLS(addr, config.HTTPS.CertFile, config.HTTPS.KeyFile, server))
+	} else {
+		log.Fatal(http.ListenAndServe(addr, server))
+	}
+
 }
 
 type server struct {
@@ -76,6 +92,6 @@ type server struct {
 }
 
 func (s server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	log.Println(req.Method, "-", req.URL.Path)
 	s.delegate.ServeHTTP(res, req)
+	log.Println(req.Method, "-", req.URL.Path)
 }
