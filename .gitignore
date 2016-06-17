@@ -2,3 +2,5 @@
 .idea/
 *.exe
 *.iml
+*.db
+*.txt

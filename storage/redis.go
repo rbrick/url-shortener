@@ -4,8 +4,10 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-const REDIS_SHORTURLS = "shorturls:"
-const REDIS_HASHES = "shorturls_hashes:"
+const (
+	REDIS_SHORTURLS = "shorturls:"
+	REDIS_HASHES    = "shorturls_hashes:"
+)
 
 type RedisShortenService struct {
 	urlCache  map[string]ShortUrl
@@ -38,8 +40,8 @@ func (r *RedisShortenService) Lookup(id string) (*ShortUrl, error) {
 			return nil, ErrorDoesNotExist
 		}
 
-		r.urlCache[id] = res
-		r.hashCache[res.Hash] = id
+		r.urlCache[res.Id] = res
+		r.hashCache[res.Hash] = res.Id
 		return &res, nil
 	}
 	return nil, ErrorDoesNotExist
@@ -79,7 +81,7 @@ func (r *RedisShortenService) ReverseLookup(longUrl string) (*ShortUrl, error) {
 			return r.Lookup(v)
 		}
 
-		v, err := redis.String(r.conn.Do("GET", query.Hash))
+		v, err := redis.String(r.conn.Do("GET", REDIS_HASHES+query.Hash))
 		if err != nil {
 			return nil, err
 		}
@@ -94,12 +96,10 @@ func (r *RedisShortenService) exists(lookupType, id string) bool {
 
 	switch lookupType {
 	case "url":
-		{
-			if _, ok := r.urlCache[id]; ok {
-				return ok
-			}
-			key = REDIS_SHORTURLS
+		if _, ok := r.urlCache[id]; ok {
+			return ok
 		}
+		key = REDIS_SHORTURLS
 	case "hash":
 		if _, ok := r.hashCache[id]; ok {
 			return ok

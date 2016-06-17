@@ -1,11 +1,7 @@
 package storage
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
 	"errors"
-	"fmt"
-	"time"
 )
 
 var (
@@ -15,28 +11,6 @@ var (
 	ErrorNotURL         = errors.New("Input is not a URL!")
 	ErrorFailedToLookup = errors.New("Failed to lookup")
 )
-
-// ShortUrl represents a short url. It contains the time it was created, the id, and the long url
-type ShortUrl struct {
-	Id        string `json:"id,omitempty"`
-	Hash      string `json:"hash,omitempty"`
-	LongUrl   string `json:"longUrl,omitempty"`
-	Timestamp int64  `json:"timestamp,omitempty"`
-}
-
-func NewShortURL(longUrl string) ShortUrl {
-	base := make([]byte, base64.StdEncoding.EncodedLen(len([]byte(longUrl))))
-	base64.StdEncoding.Encode(base, []byte(longUrl))
-	hash := fmt.Sprintf("%02x", sha1.Sum(base))
-	return ShortUrl{hash[0:8], hash, longUrl, time.Now().Unix()}
-}
-
-func NewCustomShortURL(id, longUrl string) ShortUrl {
-	base := make([]byte, base64.StdEncoding.EncodedLen(len([]byte(longUrl))))
-	base64.StdEncoding.Encode(base, []byte(longUrl))
-	hash := fmt.Sprintf("%02x", sha1.Sum(base))
-	return ShortUrl{id, hash, longUrl, time.Now().Unix()}
-}
 
 // ShortenService abstracts interactions between the database and the API
 type ShortenService interface {
@@ -50,4 +24,8 @@ type ShortenService interface {
 	Insert(*ShortUrl) error
 	// Delete deletes a short url
 	Delete(id string) error
+}
+
+type UserService interface {
+	Get(id string) *RegisteredUser
 }

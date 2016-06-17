@@ -4,13 +4,19 @@
 #     the host & port should both be specified
 # - The server port should be between the range of 0-65535 (The range of the ports, AKA limit of a 
 #     unsigned 16 bit integer)
+boltdb:
+    database-file: 'users.db'
 redis:
     host: 'localhost'
     port: 6379
 server:
     port: 8080
-    static-directory: "static"
+    static-directory: 'static'
+    template-directory: 'templates'
     use-https: false
+    admin-account:
+       username: 'admin'
+       password: 'admin'
 https:
-    key-file: "key.pem"
-    cert-file: "cert.pem"	
+    key-file: 'key.pem'
+    cert-file: 'cert.pem'

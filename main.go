@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/boltdb/bolt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/mux"
+	"github.com/rbrick/url-shortener/middleware"
 	"github.com/rbrick/url-shortener/storage"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -31,6 +33,7 @@ type Config struct {
 var (
 	config         Config
 	shortenService *storage.RedisShortenService
+	boltDatabase   *bolt.DB
 )
 
 const URL_PATTERN = `^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$`
@@ -54,8 +57,10 @@ func init() {
 	if r, err := redis.Dial("tcp", net.JoinHostPort(config.Redis.Host, config.Redis.Port)); err != nil {
 		log.Fatal(err)
 	} else {
+		log.Println("Connected to Redis.")
 		shortenService = storage.NewRedisShortenService(r)
 	}
+
 	log.Println("Done.")
 }
 
@@ -75,23 +80,28 @@ func main() {
 
 	// Handle 404 errors
 	router.NotFoundHandler = notFoundHandler{}
-
 	server := server{router}
+
+	auth := middleware.NewAuthHandler(server)
+	auth.AddPath("/me")
 
 	addr := fmt.Sprintf(":%d", config.Server.Port)
 	if config.Server.UseHTTPS {
-		log.Fatal(http.ListenAndServeTLS(addr, config.HTTPS.CertFile, config.HTTPS.KeyFile, server))
+		log.Fatal(http.ListenAndServeTLS(addr, config.HTTPS.CertFile, config.HTTPS.KeyFile, auth))
 	} else {
-		log.Fatal(http.ListenAndServe(addr, server))
+		log.Fatal(http.ListenAndServe(addr, auth))
 	}
 
 }
 
+// This wraps all incoming HTTP requests and logs them.
+// Very useful.
 type server struct {
 	delegate http.Handler
 }
 
 func (s server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	s.delegate.ServeHTTP(res, req)
 	log.Println(req.Method, "-", req.URL.Path)
+	s.delegate.ServeHTTP(res, req)
+	fmt.Println("Status:", res.Header().Get("Status"), res.WriteHeader())
 }
