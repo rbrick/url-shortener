@@ -79,7 +79,7 @@ func (r *RedisShortenService) ReverseLookup(longUrl string) (*ShortUrl, error) {
 			return r.Lookup(v)
 		}
 
-		v, err := redis.String(r.conn.Do("GET", query.Hash))
+		v, err := redis.String(r.conn.Do("GET", REDIS_HASHES+query.Hash))
 		if err != nil {
 			return nil, err
 		}

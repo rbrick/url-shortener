@@ -46,7 +46,7 @@ func ApiLookupHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func ApiCreateHandler(res http.ResponseWriter, req *http.Request) {
-	if req.Method == http.MethodPost || req.Method == http.MethodGet {
+	if req.Method == http.MethodPost {
 		err := req.ParseForm()
 
 		if err != nil {
@@ -54,10 +54,7 @@ func ApiCreateHandler(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		longUrl := strings.Replace(req.PostForm.Get("longUrl"), " ", "", -1)
-		if req.Method == http.MethodGet {
-			longUrl = strings.Replace(req.URL.Query().Get("longUrl"), " ", "", -1)
-		}
+		longUrl := req.FormValue("longUrl")
 
 		if longUrl == "" {
 			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
