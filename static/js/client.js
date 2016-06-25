@@ -20,7 +20,6 @@ function makeRequest(method, path, data, callback) {
     request.open(method, url);
 
     if (method.toLowerCase() !== 'get') {
-        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
         request.send(encode(data));
     } else {
         request.send();
@@ -28,14 +27,10 @@ function makeRequest(method, path, data, callback) {
 }
 
 function encode(data) {
-    var res = '';
-    var iter = 0;
+    var formData = new FormData();
+
     for (var k in data) {
-        iter++;
-        res = res.concat(k, '=', data[k]);
-        if (iter !== data.length) {
-            res.concat('&');
-        }
+       formData.append(k, data[k]);
     }
-    return res;
+    return formData;
 }

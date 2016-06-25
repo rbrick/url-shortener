@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/rbrick/url-shortener/storage"
 	"net/http"
@@ -47,10 +48,10 @@ func ApiLookupHandler(res http.ResponseWriter, req *http.Request) {
 
 func ApiCreateHandler(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
-		err := req.ParseForm()
-
-		if err != nil {
-			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
+		// Parse multipart form. Only allow for 128 bytes.
+		// (1 is 00000001. shift left 7 places = 10000000 or 128)
+		if err := req.ParseMultipartForm(int64(1 << 7)); err != nil {
+			handleError(res, err, http.StatusInternalServerError)
 			return
 		}
 
@@ -61,22 +62,19 @@ func ApiCreateHandler(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		matches, _ := regexp.MatchString(URL_PATTERN, longUrl)
-
-		if !matches {
+		if matches, _ := regexp.MatchString(URL_PATTERN, longUrl); !matches {
 			handleError(res, storage.ErrorNotURL, http.StatusInternalServerError)
 			return
 		}
 
-		short, _ := shortenService.ReverseLookup(longUrl)
-		if short != nil {
+		if short, _ := shortenService.ReverseLookup(longUrl); short != nil {
 			response, _ := json.Marshal(short)
 			res.Write(response)
 			return
 		}
 
 		resp := storage.NewShortURL(longUrl)
-		if err = shortenService.Insert(&resp); err != nil {
+		if err := shortenService.Insert(&resp); err != nil {
 			handleError(res, storage.ErrorFailedToCreate, http.StatusInternalServerError)
 			return
 		}
